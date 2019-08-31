@@ -87,19 +87,32 @@ defmodule ParseS3 do
   
   defp streams() do
     for file <- File.ls!("lib/policies") do
+      # filter out DRAFT....
       File.stream!("lib/policies/#{file}", read_ahead: 100_000)
     end
+  end
+
+  def createTuple(json) do
+    # IO.inspect(json)
+    productNumber = Enum.at(Regex.run(~r/productNumber\":\s*(\d+)/, json),1)
+    bool = Regex.match?(~r/formID\":\s*534/, json) |> to_string
+    {String.to_atom(bool), bool, productNumber}
   end
 
   def mainFlow() do
     streams()
     |> Flow.from_enumerables()
     # |> Flow.partition()
-    |> Flow.map(fn x -> { Enum.at(Regex.run(~r/productNumber\":\s*(\d+)/, x),1), Regex.match?(~r/formID\":\s*534/, x) } end)
+    |> Flow.map(fn q -> createTuple(q) end)
+    |> Flow.partition(key: {:elem, 0})
     |> Flow.reduce(fn -> %{} end, fn x, acc ->
-      Map.update(acc, to_string(elem(x,1)), [], fn y -> y ++ [elem(x,0)] end)
+      Map.update(acc, to_string(elem(x,1)), [], fn y -> y ++ [elem(x,2)] end)
     end)
-    |> Enum.into(%{})
+    # |> Flow.reduce()
+    |> Enum.to_list()
+    # |> Enum.into(%{})
+    # IO.inspect(s)
+    # Enum.into(s, %{})
   end
 
 end
