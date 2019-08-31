@@ -1,6 +1,6 @@
 defmodule ParseS3 do
 @filePath "lib/whatever.txt"
-@bucket "com.cfins.epw.json.prod"
+@bucket ""
   @moduledoc """
   Documentation for ParseS3.
   """
