@@ -78,7 +78,7 @@ defmodule ParseS3 do
 
   def searchFile() do
     f = File.stream!("DRAFT_POLICY_989098.json", read_ahead: 100_000)
-    Regex.match?(~r/formID\":\s*537/, f)
+    Regex.match?(~r/formID\":\s*534/, f)
   end
 
   def getPolicyNumber() do
@@ -86,14 +86,28 @@ defmodule ParseS3 do
   end
   
   defp streams() do
-    for file <- File.ls!("lib/policies") do
-      # filter out DRAFT....
+  # filter out DRAFT....below gives inconsistent results for some reason?
+  # it always excludes a single one....run twice and you get the full list!
+  # including all files always produces same results?!?!
+    for file <- File.ls!("lib/policies") |> Enum.filter( fn x -> not Regex.match?(~r/^DRAFT/, x) end) do
+    # for file <- File.ls!("lib/policies") do
+      # IO.puts(file)
       File.stream!("lib/policies/#{file}", read_ahead: 100_000)
     end
   end
 
   def createTuple(json) do
     # IO.inspect(json)
+    # cond do
+    #   Regex.match?(~r/\"docType\":\s*\"POLICY\"/, json) ->
+    #     with productNumber <- Enum.at(Regex.run(~r/productNumber\":\s*(\d+)/, json),1),
+    #          bool <- Regex.match?(~r/formID\":\s*534/, json) |> to_string
+    #     do
+    #       {String.to_atom(bool), bool, productNumber}
+    #     end
+    #   true ->
+    #     {:draft, "draft", nil}
+    # end
     productNumber = Enum.at(Regex.run(~r/productNumber\":\s*(\d+)/, json),1)
     bool = Regex.match?(~r/formID\":\s*534/, json) |> to_string
     {String.to_atom(bool), bool, productNumber}
