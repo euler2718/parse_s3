@@ -1,7 +1,7 @@
 # ParseS3
 
 **Description**
-
+Using elixir's Flow (MapReduce) library to search across files for matches
 
 
 ## Usage
@@ -43,3 +43,9 @@ iex(2)> ParseS3.mainFlow
    "6922209", "6947640", "6957847", "6984244"]
 }
 ``
+
+## Notes
+
+Be sure to mix deps.get as usual.
+If the searchable files have multiple lines, use Flow.flat_map instead of Flow.map in the mainFlow method.
+Also, consider Flow.filter if the file size is large after the (flat_)map to reduce producer's efforts.
