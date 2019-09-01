@@ -1,7 +1,7 @@
 defmodule ParseS3 do
 @filePath "lib/whatever.txt"
-@bucket "bucket-name"
-@formID "formID"
+@bucket "com.cfins.epw.json.prod"
+@formID 534
   @moduledoc """
   Documentation for ParseS3.
   """
@@ -70,7 +70,6 @@ defmodule ParseS3 do
 
   def downloadSingleFile(fileName) do
     with splitter <- String.split(fileName, "/"),
-         _policyNum <- splitter |> Enum.at(0),
          filename <- splitter |> Enum.at(1)
     do
       ExAws.S3.download_file(@bucket, fileName, "lib/policies/#{filename}")
