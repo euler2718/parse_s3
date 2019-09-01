@@ -1,7 +1,7 @@
 defmodule ParseS3 do
 @filePath "lib/whatever.txt"
-@bucket "com.cfins.epw.json.prod"
-@formID 534
+@bucket "bucket-name"
+@formID "form-id"
   @moduledoc """
   Documentation for ParseS3.
   """
