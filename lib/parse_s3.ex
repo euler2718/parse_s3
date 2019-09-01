@@ -1,6 +1,7 @@
 defmodule ParseS3 do
 @filePath "lib/whatever.txt"
-@bucket "com.cfins.epw.json.prod"
+@bucket "bucket-name"
+@formID "formID"
   @moduledoc """
   Documentation for ParseS3.
   """
@@ -78,7 +79,7 @@ defmodule ParseS3 do
 
   def searchFile() do
     f = File.stream!("DRAFT_POLICY_989098.json", read_ahead: 100_000)
-    Regex.match?(~r/formID\":\s*534/, f)
+    Regex.match?(~r/formID\":\s*#{@formID}/, f)
   end
   
   defp streams() do
@@ -91,7 +92,7 @@ defmodule ParseS3 do
   def createTuple(json) do
     # IO.inspect(json)
     productNumber = Regex.run(~r/productNumber\":\s*(\d+)/, json) |> List.last
-    boolString = Regex.match?(~r/formID\":\s*534/, json) |> to_string
+    boolString = Regex.match?(~r/formID\":\s*#{@formID}/, json) |> to_string
     {String.to_atom(boolString), productNumber}
   end
 
