@@ -2,6 +2,8 @@
 
 **TODO: Add description**
 
+THIS IS NOT AVAILABLE IN HEX
+
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
