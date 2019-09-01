@@ -1,6 +1,6 @@
 defmodule ParseS3 do
 @filePath "lib/whatever.txt"
-@bucket ""
+@bucket "com.cfins.epw.json.prod"
   @moduledoc """
   Documentation for ParseS3.
   """
@@ -69,7 +69,7 @@ defmodule ParseS3 do
 
   def downloadSingleFile(fileName) do
     with splitter <- String.split(fileName, "/"),
-         policyNum <- splitter |> Enum.at(0),
+         _policyNum <- splitter |> Enum.at(0),
          filename <- splitter |> Enum.at(1)
     do
       ExAws.S3.download_file(@bucket, fileName, "lib/policies/#{filename}")
@@ -80,17 +80,9 @@ defmodule ParseS3 do
     f = File.stream!("DRAFT_POLICY_989098.json", read_ahead: 100_000)
     Regex.match?(~r/formID\":\s*534/, f)
   end
-
-  def getPolicyNumber() do
-    
-  end
   
   defp streams() do
-  # filter out DRAFT....below gives inconsistent results for some reason?
-  # it always excludes a single one....run twice and you get the full list!
-  # including all files always produces same results?!?!
-    for file <- File.ls!("lib/policies") |> Enum.filter( fn x -> not Regex.match?(~r/^DRAFT/, x) end) do
-    # for file <- File.ls!("lib/policies") do
+    for file <- File.ls!("lib/policies") |> Enum.filter( fn x -> Regex.match?(~r/^POLICY/, x) end) do
       # IO.puts(file)
       File.stream!("lib/policies/#{file}", read_ahead: 100_000)
     end
@@ -98,35 +90,21 @@ defmodule ParseS3 do
 
   def createTuple(json) do
     # IO.inspect(json)
-    # cond do
-    #   Regex.match?(~r/\"docType\":\s*\"POLICY\"/, json) ->
-    #     with productNumber <- Enum.at(Regex.run(~r/productNumber\":\s*(\d+)/, json),1),
-    #          bool <- Regex.match?(~r/formID\":\s*534/, json) |> to_string
-    #     do
-    #       {String.to_atom(bool), bool, productNumber}
-    #     end
-    #   true ->
-    #     {:draft, "draft", nil}
-    # end
-    productNumber = Enum.at(Regex.run(~r/productNumber\":\s*(\d+)/, json),1)
-    bool = Regex.match?(~r/formID\":\s*534/, json) |> to_string
-    {String.to_atom(bool), bool, productNumber}
+    productNumber = Regex.run(~r/productNumber\":\s*(\d+)/, json) |> List.last
+    boolString = Regex.match?(~r/formID\":\s*534/, json) |> to_string
+    {String.to_atom(boolString), productNumber}
   end
 
   def mainFlow() do
     streams()
     |> Flow.from_enumerables()
-    # |> Flow.partition()
-    |> Flow.map(fn q -> createTuple(q) end)
+    |> Flow.map(&createTuple(&1))
     |> Flow.partition(key: {:elem, 0})
     |> Flow.reduce(fn -> %{} end, fn x, acc ->
-      Map.update(acc, to_string(elem(x,1)), [], fn y -> y ++ [elem(x,2)] end)
+      Map.update(acc, elem(x,0), [elem(x,1)], fn y -> y ++ [elem(x,1)] end)
     end)
-    # |> Flow.reduce()
-    |> Enum.to_list()
-    # |> Enum.into(%{})
-    # IO.inspect(s)
-    # Enum.into(s, %{})
+    # |> Enum.to_list()
+    |> Enum.into(%{})
   end
 
 end
